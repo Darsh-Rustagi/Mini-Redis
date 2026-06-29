@@ -1,0 +1,80 @@
+# ===========================
+# Build Directories
+# ===========================
+build/
+cmake-build-*/
+out/
+
+# ===========================
+# CMake Generated Files
+# ===========================
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+install_manifest.txt
+
+# ===========================
+# Executables
+# ===========================
+*.exe
+*.out
+*.app
+
+# ===========================
+# Object Files
+# ===========================
+*.o
+*.obj
+*.lo
+*.a
+*.so
+*.dll
+*.dylib
+*.lib
+
+# ===========================
+# Debug Files
+# ===========================
+*.dSYM/
+*.stackdump
+core
+core.*
+
+# ===========================
+# IDE Files
+# ===========================
+
+# VS Code
+.vscode/
+
+# CLion
+.idea/
+
+# Visual Studio
+.vs/
+
+# ===========================
+# OS Files
+# ===========================
+.DS_Store
+Thumbs.db
+
+# ===========================
+# Logs
+# ===========================
+*.log
+
+# ===========================
+# Docker
+# ===========================
+docker-compose.override.yml
+
+# ===========================
+# Temporary Files
+# ===========================
+*.tmp
+*.swp
+*.bak
