@@ -8,8 +8,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_executable(mini-redis
     src/main.cpp
-    src/server.cpp
+    src/Server.cpp
     src/network/TcpServer.cpp
+    src/storage/StorageEngine.cpp
+    src/protocol/CommandParser.cpp
+    src/commands/CommandDispatcher.cpp
 )
 
 target_include_directories(mini-redis

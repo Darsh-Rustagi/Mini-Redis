@@ -5,10 +5,9 @@
 void Server::start() {
   std::cout << "Starting application..." << std::endl;
 
-  if (!tcpServer.initialize(6379)) {
+  if (!tcpserver.initialize(6375)) {
     std::cout << "Failed to initialize TCP server." << std::endl;
     return;
   }
-
-  tcpServer.start();
+  tcpserver.start();
 }
