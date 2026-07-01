@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  mini-redis:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+
+    container_name: mini-redis-dev
+
+    volumes:
+      - .:/workspace
+
+    working_dir: /workspace
+
+    stdin_open: true
+
+    tty: true
+
+    ports:
+      - "6375:6375"

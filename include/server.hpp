@@ -4,7 +4,7 @@
 
 class Server {
 public:
-  void start();
+  void start(int port);
 
 private:
   TcpServer tcpserver;

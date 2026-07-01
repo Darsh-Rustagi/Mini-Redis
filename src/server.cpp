@@ -1,11 +1,11 @@
-#include "../include/server.hpp"
+#include "server.hpp"
 
 #include <iostream>
 
-void Server::start() {
+void Server::start(int port) {
   std::cout << "Starting application..." << std::endl;
 
-  if (!tcpserver.initialize(6375)) {
+  if (!tcpserver.initialize(port)) {
     std::cout << "Failed to initialize TCP server." << std::endl;
     return;
   }
