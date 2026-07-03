@@ -1,67 +1,99 @@
 #include "commands/CommandDispatcher.hpp"
+#include "protocol/RESPSerializer.hpp"
 
 CommandDispatcher::CommandDispatcher() {}
 
+// ===========================
+// Dispatch Command
+// ===========================
+
 std::string CommandDispatcher::dispatch(const Command &command) {
-  // ===========================
-  // SET
-  // ===========================
 
-  if (command.name == "SET") {
-    if (command.arguments.size() != 2) {
-      return "ERROR: SET requires key and value";
+
+    // ===========================
+    // PING
+    // ===========================
+
+    if (command.name == "PING") {
+        if (command.arguments.empty()) {
+            return RESPSerializer::simpleString("PONG");
+        }
+
+        if (command.arguments.size() == 1) {
+            return RESPSerializer::bulkString(command.arguments[0]);
+        }
+
+        return RESPSerializer::error(
+            "ERR wrong number of arguments for 'PING'");
     }
 
-    storageEngine.set(command.arguments[0], command.arguments[1]);
+    // ===========================
+    // SET
+    // ===========================
 
-    return "OK";
-  }
+    if (command.name == "SET") {
+        if (command.arguments.size() != 2) {
+            return RESPSerializer::error(
+                "ERR wrong number of arguments for 'SET'");
+        }
 
-  // ===========================
-  // GET
-  // ===========================
+        storageEngine.set(command.arguments[0], command.arguments[1]);
 
-  if (command.name == "GET") {
-    if (command.arguments.size() != 1) {
-      return "ERROR: GET requires key";
+        return RESPSerializer::simpleString("OK");
     }
 
-    auto value = storageEngine.get(command.arguments[0]);
+    // ===========================
+    // GET
+    // ===========================
 
-    if (value) {
-      return *value;
+    if (command.name == "GET") {
+        if (command.arguments.size() != 1) {
+            return RESPSerializer::error(
+                "ERR wrong number of arguments for 'GET'");
+        }
+
+        auto value = storageEngine.get(command.arguments[0]);
+
+        if (value.has_value()) {
+            return RESPSerializer::bulkString(value.value());
+        }
+
+        return RESPSerializer::nullBulkString();
     }
 
-    return "NULL";
-  }
+    // ===========================
+    // DEL
+    // ===========================
 
-  // ===========================
-  // DEL
-  // ===========================
+    if (command.name == "DEL") {
+        if (command.arguments.size() != 1) {
+            return RESPSerializer::error(
+                "ERR wrong number of arguments for 'DEL'");
+        }
 
-  if (command.name == "DEL") {
-    if (command.arguments.size() != 1) {
-      return "ERROR: DEL requires key";
+        bool removed = storageEngine.del(command.arguments[0]);
+
+        return RESPSerializer::integer(removed ? 1 : 0);
     }
 
-    bool removed = storageEngine.del(command.arguments[0]);
+    // ===========================
+    // EXISTS
+    // ===========================
 
-    return removed ? "1" : "0";
-  }
+    if (command.name == "EXISTS") {
+        if (command.arguments.size() != 1) {
+            return RESPSerializer::error(
+                "ERR wrong number of arguments for 'EXISTS'");
+        }
 
-  // ===========================
-  // EXISTS
-  // ===========================
+        bool exists = storageEngine.exists(command.arguments[0]);
 
-  if (command.name == "EXISTS") {
-    if (command.arguments.size() != 1) {
-      return "ERROR: EXISTS requires key";
+        return RESPSerializer::integer(exists ? 1 : 0);
     }
 
-    bool exists = storageEngine.exists(command.arguments[0]);
+    // ===========================
+    // Unknown Command
+    // ===========================
 
-    return exists ? "1" : "0";
-  }
-
-  return "ERROR: Unknown command";
+    return RESPSerializer::error("ERR unknown command");
 }

@@ -12,6 +12,8 @@ add_executable(mini-redis
     src/network/TcpServer.cpp
     src/storage/StorageEngine.cpp
     src/protocol/CommandParser.cpp
+    src/protocol/RESPParser.cpp
+    src/protocol/RESPSerializer.cpp
     src/commands/CommandDispatcher.cpp
     src/config/config.cpp
     src/utils/logger.cpp

@@ -1,4 +1,6 @@
 #include "../../include/network/TcpServer.hpp"
+#include "../../include/protocol/RESPParser.hpp"
+#include "../../include/protocol/RESPSerializer.hpp"
 
 #include <array>
 #include <cerrno>
@@ -128,60 +130,108 @@ void TcpServer::acceptClients() {
 }
 
 void TcpServer::handleClient(int clientSocket) {
-  while (true) {
-    std::array<char, 1024> buffer{};
 
-    ssize_t bytesReceived = recv(clientSocket, buffer.data(), buffer.size(), 0);
+    RESPParser respParser;
 
-    if (bytesReceived > 0) {
-      std::string message(buffer.data(), bytesReceived);
+    while (true) {
 
-      // Remove trailing newline / carriage return
-      while (!message.empty() &&
-             (message.back() == '\n' || message.back() == '\r')) {
-        message.pop_back();
-      }
+        std::array<char, 1024> buffer{};
 
-      std::cout << "Received: " << message << std::endl;
+        ssize_t bytesReceived =
+            recv(clientSocket, buffer.data(), buffer.size(), 0);
 
-      //------------------------------------------------
-      // Parse command
-      //------------------------------------------------
+        if (bytesReceived > 0) {
 
-      Command command = commandParser.parse(message);
+            std::string request(buffer.data(), bytesReceived);
 
-      //------------------------------------------------
-      // Execute command
-      //------------------------------------------------
+            //------------------------------------------------
+            // Parse RESP
+            //------------------------------------------------
 
-      std::string response = commandDispatcher.dispatch(command);
+            std::vector<std::string> args;
 
-      //------------------------------------------------
-      // Send response
-      //------------------------------------------------
+            try {
+                args = respParser.parse(request);
+            }
+            catch (...) {
 
-      response += "\n";
+                std::string error =
+                    RESPSerializer::error("ERR Protocol Error");
 
-      ssize_t bytesSent =
-          send(clientSocket, response.c_str(), response.size(), 0);
+                send(clientSocket,
+                     error.c_str(),
+                     error.size(),
+                     0);
 
-      if (bytesSent == -1) {
-        std::cerr << "send failed: " << strerror(errno) << std::endl;
+                continue;
+            }
 
-        break;
-      }
-    } else if (bytesReceived == 0) {
-      std::cout << "Client disconnected." << std::endl;
+            //------------------------------------------------
+            // Convert arguments into command string
+            //------------------------------------------------
 
-      break;
-    } else {
-      std::cerr << "recv failed: " << strerror(errno) << std::endl;
+            std::string message;
 
-      break;
+            for (const auto &arg : args) {
+
+                if (!message.empty())
+                    message += " ";
+
+                message += arg;
+            }
+
+            std::cout << "Received: " << message << std::endl;
+
+            //------------------------------------------------
+            // Parse command
+            //------------------------------------------------
+
+            Command command = commandParser.parse(message);
+
+            //------------------------------------------------
+            // Execute command
+            //------------------------------------------------
+
+            std::string response = commandDispatcher.dispatch(command);
+
+            //------------------------------------------------
+            // Send response (already RESP encoded)
+            //------------------------------------------------
+
+            ssize_t bytesSent =
+                send(clientSocket,
+                    response.c_str(),
+                    response.size(),
+                    0);
+
+            if (bytesSent == -1) {
+
+                std::cerr << "send failed: "
+                          << strerror(errno)
+                          << std::endl;
+
+                break;
+            }
+        }
+        else if (bytesReceived == 0) {
+
+            std::cout << "Client disconnected."
+                      << std::endl;
+
+            break;
+        }
+        else {
+
+            std::cerr << "recv failed: "
+                      << strerror(errno)
+                      << std::endl;
+
+            break;
+        }
     }
-  }
 
-  close(clientSocket);
+    close(clientSocket);
 
-  std::cout << "Connection closed." << std::endl;
+    std::cout << "Connection closed."
+              << std::endl;
 }
